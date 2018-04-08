@@ -23,7 +23,7 @@
         <dependency>
             <groupId>com.github.Discord4J</groupId>
             <artifactId>Discord4J</artifactId>
-            <version>dev-SNAPSHOT</version>
+            <version>d46e57d</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
