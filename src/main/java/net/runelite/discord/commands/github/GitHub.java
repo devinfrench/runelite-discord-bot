@@ -20,19 +20,17 @@ public class GitHub implements Command {
         if (args.isEmpty()) {
             return;
         }
-        if (args.get(0).startsWith("#")) {
-            int number;
-            try {
-                number = Integer.valueOf(args.get(0).substring(1));
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                return;
-            }
-            if (number > 0) {
-                String htmlURL = getHtmlUrl(number);
-                if (htmlURL != null) {
-                    event.getChannel().sendMessage(htmlURL);
-                }
+        int number;
+        try {
+            number = Integer.valueOf(args.get(0));
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return;
+        }
+        if (number > 0) {
+            String htmlURL = getHtmlUrl(number);
+            if (htmlURL != null) {
+                event.getChannel().sendMessage(htmlURL);
             }
         }
     }
