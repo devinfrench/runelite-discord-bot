@@ -1,5 +1,6 @@
 package net.runelite.discord.commands;
 
+import net.runelite.discord.commands.github.GitHub;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 
@@ -9,6 +10,10 @@ public class CommandHandler {
 
     private static final String COMMAND_PREFIX = "!";
     private static Map<String, Command> commands = new HashMap<>();
+
+    static {
+        commands.put("gh", new GitHub());
+    }
 
     @EventSubscriber
     public void onMessageReceivedEvent(MessageReceivedEvent event) {
