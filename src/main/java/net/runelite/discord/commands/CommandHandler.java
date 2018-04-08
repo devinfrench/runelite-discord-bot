@@ -2,6 +2,7 @@ package net.runelite.discord.commands;
 
 import net.runelite.discord.commands.github.GitHub;
 import net.runelite.discord.commands.runelite.FAQ;
+import net.runelite.discord.commands.runelite.Help;
 import net.runelite.discord.commands.runelite.Information;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
@@ -17,6 +18,7 @@ public class CommandHandler {
         commands.put("gh", new GitHub());
         commands.put("faq", new FAQ());
         commands.put("info", new Information());
+        commands.put("help", new Help());
     }
 
     @EventSubscriber
