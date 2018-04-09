@@ -54,7 +54,9 @@ public class SessionsUpdater extends Thread {
 
     private void changePresence() {
         int sessions = getRuneLiteSessionCount();
-        client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, sessions + " players online");
+        if (sessions > -1) {
+            client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, sessions + " players online");
+        }
     }
 
     private int getRuneLiteSessionCount() {
