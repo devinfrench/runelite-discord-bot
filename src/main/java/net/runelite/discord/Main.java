@@ -2,6 +2,7 @@ package net.runelite.discord;
 
 import net.runelite.discord.client.Client;
 import net.runelite.discord.commands.CommandHandler;
+import net.runelite.discord.presence.SessionsUpdater;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
 
@@ -11,6 +12,9 @@ public class Main {
         IDiscordClient client = Client.createClient(args[0], true);
         EventDispatcher dispatcher = client.getDispatcher();
         dispatcher.registerListener(new CommandHandler());
+        SessionsUpdater sessionsUpdater = new SessionsUpdater();
+        dispatcher.registerListener(sessionsUpdater);
+        sessionsUpdater.start();
     }
 
 }
