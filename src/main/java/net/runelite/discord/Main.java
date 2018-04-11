@@ -12,9 +12,7 @@ public class Main {
         IDiscordClient client = Client.createClient(args[0], true);
         EventDispatcher dispatcher = client.getDispatcher();
         dispatcher.registerListener(new CommandHandler());
-        SessionsUpdater sessionsUpdater = new SessionsUpdater();
-        dispatcher.registerListener(sessionsUpdater);
-        sessionsUpdater.start();
+        dispatcher.registerListener(new SessionsUpdater());
     }
 
 }

@@ -34,6 +34,7 @@ public class SessionsUpdater extends Thread {
     public void onReadyEvent(ReadyEvent event) {
         client = event.getClient();
         changePresence();
+        start();
     }
 
     @Override
