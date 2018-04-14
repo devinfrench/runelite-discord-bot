@@ -87,8 +87,7 @@ public class Issues extends Thread implements Command {
                         hasIssues = false;
                     }
                 }
-                Thread.sleep(5000);
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }

@@ -1,6 +1,6 @@
 package net.runelite.discord.presence;
 
-import org.apache.commons.io.IOUtils;
+import net.runelite.discord.commands.github.GitHubApi;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
@@ -19,13 +19,11 @@ import sx.blah.discord.handle.obj.StatusType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 public class SessionsUpdater extends Thread {
 
-    private static final String GITHUB_BASE_URL = "https://api.github.com/repos/runelite/runelite/";
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36";
 
     private IDiscordClient client;
@@ -88,8 +86,11 @@ public class SessionsUpdater extends Thread {
 
     private String getLatestTag() {
         try {
-            JSONArray ja = (JSONArray) new JSONTokener(IOUtils.toString(new URL(GITHUB_BASE_URL + "tags").openStream(), "UTF-8")).nextValue();
-            return ((JSONObject) ja.get(0)).getString("name");
+            String tagsJson = GitHubApi.get("/tags");
+            if (tagsJson != null) {
+                JSONArray ja = (JSONArray) new JSONTokener(tagsJson).nextValue();
+                return ((JSONObject) ja.get(0)).getString("name");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
