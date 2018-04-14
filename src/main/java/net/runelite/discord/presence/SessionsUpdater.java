@@ -19,39 +19,25 @@ import sx.blah.discord.handle.obj.StatusType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-public class SessionsUpdater extends Thread {
+public class SessionsUpdater implements Runnable {
 
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36";
 
     private IDiscordClient client;
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @EventSubscriber
     public void onReadyEvent(ReadyEvent event) {
         client = event.getClient();
-        changePresence();
-        start();
+        scheduler.scheduleAtFixedRate(this, 0, 1, TimeUnit.MINUTES);
     }
 
     @Override
     public void run() {
-        Instant minute = Instant.now().plus(1, ChronoUnit.MINUTES);
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ignored) {
-            }
-            Instant now = Instant.now();
-            if (client != null && now.isAfter(minute)) {
-                changePresence();
-                minute = now.plus(1, ChronoUnit.MINUTES);
-            }
-        }
-    }
-
-    private void changePresence() {
         int sessions = getRuneLiteSessionCount();
         if (sessions > -1) {
             client.changePresence(StatusType.ONLINE, ActivityType.PLAYING, sessions + " players online");
