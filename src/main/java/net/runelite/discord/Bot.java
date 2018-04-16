@@ -11,10 +11,15 @@ import sx.blah.discord.api.events.EventDispatcher;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IRole;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Bot {
 
     public static IGuild runelite;
+    public static Map<String, IRole> roles = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
         GitHubApi.OAUTH_TOKEN = args[1];
@@ -32,6 +37,15 @@ public class Bot {
         for (IGuild guild : event.getClient().getGuilds()) {
             if (guild.getName().equals("RuneLite")) {
                 runelite = guild;
+            }
+        }
+        for (IRole role : runelite.getRoles()) {
+            if (role.getName().equals("contributor")) {
+                roles.put("contributor", role);
+            } else if (role.getName().equals("admin")) {
+                roles.put("admin", role);
+            } else if (role.getName().equals("streamer")) {
+                roles.put("streamer", role);
             }
         }
     }
