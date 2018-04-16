@@ -58,7 +58,7 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>net.runelite.discord.Main</mainClass>
+                                    <mainClass>net.runelite.discord.Bot</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

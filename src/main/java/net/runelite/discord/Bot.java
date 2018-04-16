@@ -9,7 +9,7 @@ import net.runelite.discord.presence.twitch.TwitchApi;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
 
-public class Main {
+public class Bot {
 
     public static void main(String[] args) {
         GitHubApi.OAUTH_TOKEN = args[1];
