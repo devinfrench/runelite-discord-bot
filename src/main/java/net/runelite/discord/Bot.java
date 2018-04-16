@@ -10,6 +10,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IRole;
 
@@ -20,6 +21,7 @@ public class Bot {
 
     public static IGuild runelite;
     public static Map<String, IRole> roles = new ConcurrentHashMap<>();
+    public static Map<String, IChannel> channels = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
         GitHubApi.OAUTH_TOKEN = args[1];
@@ -47,6 +49,9 @@ public class Bot {
             } else if (role.getName().equals("streamer")) {
                 roles.put("streamer", role);
             }
+        }
+        for (IChannel channel : runelite.getChannels()) {
+            channels.put(channel.getName(), channel);
         }
     }
 

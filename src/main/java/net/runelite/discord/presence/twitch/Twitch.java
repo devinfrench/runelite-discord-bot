@@ -5,9 +5,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
 import sx.blah.discord.handle.obj.ActivityType;
-import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IPresence;
-import sx.blah.discord.handle.obj.IRole;
 
 public class Twitch {
 
@@ -23,16 +21,14 @@ public class Twitch {
             && presence.getActivity().get() == ActivityType.STREAMING
             && presence.getStreamingUrl().isPresent()
             && !event.getOldPresence().getStreamingUrl().isPresent()) {
-            IChannel channel = Bot.runelite.getChannelsByName("twitch").get(0);
-            IRole role = Bot.runelite.getRolesByName("streamer").get(0);
-            if (event.getUser().hasRole(role)) {
+            if (event.getUser().hasRole(Bot.roles.get("streamer"))) {
                 String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
                 TwitchApi.Stream stream = TwitchApi.getStream(id);
                 if (stream == null || !stream.getGame().contains("RuneScape")) {
                     return;
                 }
                 EmbedObject embedObject = createEmbedObject(presence, stream);
-                channel.sendMessage(presence.getStreamingUrl().get(), embedObject);
+                Bot.channels.get("twitch").sendMessage(presence.getStreamingUrl().get(), embedObject);
             }
         }
     }
