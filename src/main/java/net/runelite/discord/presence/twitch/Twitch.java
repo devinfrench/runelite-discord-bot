@@ -1,48 +1,39 @@
 package net.runelite.discord.presence.twitch;
 
+import net.runelite.discord.Bot;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
-import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
-import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.handle.obj.ActivityType;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IPresence;
+import sx.blah.discord.handle.obj.IRole;
 
 public class Twitch {
 
     private static final String EMBED_COLOR_HEX = "634299";
 
-    private IGuild guild;
-    private IChannel channel;
-    private IRole role;
-
-    @EventSubscriber
-    public void onReadyEvent(ReadyEvent event) {
-        for (IGuild guild : event.getClient().getGuilds()) {
-            if (guild.getName().equals("RuneLite")) {
-                this.guild = guild;
-            }
-        }
-        channel = guild.getChannelsByName("twitch").get(0);
-        role = guild.getRolesByName("streamer").get(0);
-    }
-
     @EventSubscriber
     public void onPresenceUpdateEvent(PresenceUpdateEvent event) {
-        if (role == null || channel == null) {
+        if (Bot.runelite == null) {
             return;
         }
         IPresence presence = event.getNewPresence();
-        if (event.getUser().hasRole(role)
-            && presence.getActivity().isPresent()
+        if (presence.getActivity().isPresent()
             && presence.getActivity().get() == ActivityType.STREAMING
             && presence.getStreamingUrl().isPresent()
             && !event.getOldPresence().getStreamingUrl().isPresent()) {
-            String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
-            TwitchApi.Stream stream = TwitchApi.getStream(id);
-            if (stream == null || !stream.getGame().contains("RuneScape")) {
-                return;
+            IChannel channel = Bot.runelite.getChannelsByName("twitch").get(0);
+            IRole role = Bot.runelite.getRolesByName("streamer").get(0);
+            if (event.getUser().hasRole(role)) {
+                String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
+                TwitchApi.Stream stream = TwitchApi.getStream(id);
+                if (stream == null || !stream.getGame().contains("RuneScape")) {
+                    return;
+                }
+                EmbedObject embedObject = createEmbedObject(presence, stream);
+                channel.sendMessage(presence.getStreamingUrl().get(), embedObject);
             }
-            EmbedObject embedObject = createEmbedObject(presence, stream);
-            channel.sendMessage(presence.getStreamingUrl().get(), embedObject);
         }
     }
 
