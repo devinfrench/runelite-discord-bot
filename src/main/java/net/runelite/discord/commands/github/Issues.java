@@ -7,20 +7,22 @@ import org.json.JSONTokener;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Issues extends Thread implements Command {
 
     private static final String ISSUE_BASE_URL = "https://github.com/runelite/runelite/issues/";
 
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private Map<Integer, String> issues = new ConcurrentHashMap<>();
 
     public Issues() {
-        start();
+        scheduler.scheduleAtFixedRate(this, 0, 10, TimeUnit.MINUTES);
     }
 
     @Override
@@ -52,18 +54,6 @@ public class Issues extends Thread implements Command {
     @Override
     public void run() {
         populateIssues();
-        Instant tenMinutes = Instant.now().plus(10, ChronoUnit.MINUTES);
-        while (true) {
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException ignored) {
-            }
-            Instant now = Instant.now();
-            if (now.isAfter(tenMinutes)) {
-                populateIssues();
-                tenMinutes = now.plus(10, ChronoUnit.MINUTES);
-            }
-        }
     }
 
     private void populateIssues() {
