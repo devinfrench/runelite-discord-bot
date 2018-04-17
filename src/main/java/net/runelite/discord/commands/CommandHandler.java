@@ -21,6 +21,7 @@ public class CommandHandler {
         commands.put("issue", new Issues());
         commands.put("add", new AddCommand());
         commands.put("del", new DelCommand());
+        commands.put("help", new Help());
     }
 
     @EventSubscriber
