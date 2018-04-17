@@ -1,7 +1,6 @@
 package net.runelite.discord.commands.custom;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -17,7 +16,8 @@ public class CustomCommands {
 
     public static void load() {
         try {
-            String commandsJson = IOUtils.toString(CustomCommands.class.getResourceAsStream("commands.json"), "UTF-8");
+            File file = new File(System.getProperty("user.dir") + File.separator + "commands.json");
+            String commandsJson = FileUtils.readFileToString(file, "UTF-8");
             commands.clear();
             JSONArray ja = (JSONArray) new JSONTokener(commandsJson).nextValue();
             for (int i = 0; i < ja.length(); i++) {
@@ -38,8 +38,8 @@ public class CustomCommands {
             commandsJson = commandsJson.substring(0, commandsJson.lastIndexOf(","));
         }
         commandsJson += "]";
-        File file = new File(CustomCommands.class.getResource("commands.json").getPath());
         try {
+            File file = new File(System.getProperty("user.dir") + File.separator + "commands.json");
             FileUtils.write(file, commandsJson, "UTF-8");
         } catch (IOException e) {
             e.printStackTrace();
