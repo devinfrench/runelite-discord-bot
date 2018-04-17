@@ -42,13 +42,7 @@ public class Bot {
             }
         }
         for (IRole role : runelite.getRoles()) {
-            if (role.getName().equals("contributor")) {
-                roles.put("contributor", role);
-            } else if (role.getName().equals("admin")) {
-                roles.put("admin", role);
-            } else if (role.getName().equals("streamer")) {
-                roles.put("streamer", role);
-            }
+            roles.put(role.getName(), role);
         }
         for (IChannel channel : runelite.getChannels()) {
             channels.put(channel.getName(), channel);
