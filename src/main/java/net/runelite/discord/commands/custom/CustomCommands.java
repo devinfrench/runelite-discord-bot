@@ -1,6 +1,7 @@
 package net.runelite.discord.commands.custom;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -33,7 +34,8 @@ public class CustomCommands {
         String commandsJson = "[";
         if (!commands.isEmpty()) {
             for (String command : commands.keySet()) {
-                commandsJson += "{\"command\":\"" + command + "\",\"response\":\"" + commands.get(command) + "\"},";
+                commandsJson += "{\"command\":\"" + command + "\",\"response\":\""
+                    + StringEscapeUtils.escapeJson(commands.get(command)) + "\"},";
             }
             commandsJson = commandsJson.substring(0, commandsJson.lastIndexOf(","));
         }
