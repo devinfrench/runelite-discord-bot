@@ -5,7 +5,10 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
 import sx.blah.discord.handle.obj.ActivityType;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IPresence;
+import sx.blah.discord.util.MessageHistory;
 
 public class Twitch {
 
@@ -13,24 +16,32 @@ public class Twitch {
 
     @EventSubscriber
     public void onPresenceUpdateEvent(PresenceUpdateEvent event) {
-        if (Bot.runelite == null) {
+        if (Bot.runelite == null || !event.getUser().hasRole(Bot.roles.get("streamer"))) {
             return;
         }
-        IPresence presence = event.getNewPresence();
-        if (presence.getActivity().isPresent()
-            && presence.getActivity().get() == ActivityType.STREAMING
-            && presence.getStreamingUrl().isPresent()
+        IPresence newPresence = event.getNewPresence();
+        IPresence oldPresence = event.getOldPresence();
+        if (newPresence.getActivity().isPresent()
+            && newPresence.getActivity().get() == ActivityType.STREAMING
+            && newPresence.getStreamingUrl().isPresent()
             && !event.getOldPresence().getStreamingUrl().isPresent()) {
-            if (event.getUser().hasRole(Bot.roles.get("streamer"))) {
-                String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
-                TwitchApi.Stream stream = TwitchApi.getStream(id);
-                if (stream == null || !stream.getGame().contains("RuneScape")) {
-                    return;
-                }
-                EmbedObject embedObject = createEmbedObject(presence, stream);
-                Bot.channels.get("twitch").sendMessage(presence.getStreamingUrl().get(), embedObject);
-            }
+            sendStreamMessage(newPresence);
         }
+        if (newPresence.getActivity().isPresent()
+            && newPresence.getActivity().get() != ActivityType.STREAMING
+            && oldPresence.getStreamingUrl().isPresent()) {
+            deleteStreamMessage(oldPresence.getStreamingUrl().get());
+        }
+    }
+
+    private void sendStreamMessage(IPresence presence) {
+        String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
+        TwitchApi.Stream stream = TwitchApi.getStream(id);
+        if (stream == null || !stream.getGame().contains("RuneScape")) {
+            return;
+        }
+        EmbedObject embedObject = createEmbedObject(presence, stream);
+        Bot.channels.get("twitch").sendMessage(presence.getStreamingUrl().get(), embedObject);
     }
 
     private EmbedObject createEmbedObject(IPresence presence, TwitchApi.Stream stream) {
@@ -52,6 +63,16 @@ public class Twitch {
             stream.getPreview(), null, 360, 640
         );
         return embedObject;
+    }
+
+    private void deleteStreamMessage(String streamUrl) {
+        IChannel channel = Bot.channels.get("twitch");
+        MessageHistory messages = channel.getMessageHistory();
+        for (IMessage message : messages) {
+            if (message.getContent().contains(streamUrl)) {
+                message.delete();
+            }
+        }
     }
 
 }
