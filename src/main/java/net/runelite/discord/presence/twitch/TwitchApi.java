@@ -33,12 +33,13 @@ public class TwitchApi {
                 joChannel.getString("status"),
                 jo.getString("game"),
                 jo.getInt("viewers"),
+                jo.getString("stream_type"),
                 joPreview.getString("large"),
                 joChannel.getString("logo")
             );
         } catch (JSONException e) {
-            e.printStackTrace();
         }
+
         return null;
     }
 
@@ -57,8 +58,8 @@ public class TwitchApi {
             response.close();
             return content;
         } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
         }
+
         return null;
     }
 
@@ -68,14 +69,16 @@ public class TwitchApi {
         private String title;
         private String game;
         private int viewers;
+        private final String type;
         private String preview;
         private String logo;
 
-        public Stream(String displayName, String title, String game, int viewers, String preview, String logo) {
+        public Stream(String displayName, String title, String game, int viewers, String type, String preview, String logo) {
             this.displayName = displayName;
             this.title = title;
             this.game = game;
             this.viewers = viewers;
+            this.type = type;
             this.preview = preview;
             this.logo = logo;
         }
@@ -104,6 +107,10 @@ public class TwitchApi {
             return logo;
         }
 
+        public String getType() {
+            return type;
+        }
+
         @Override
         public String toString() {
             return "Stream{" +
@@ -111,11 +118,11 @@ public class TwitchApi {
                 ", title='" + title + '\'' +
                 ", game='" + game + '\'' +
                 ", viewers=" + viewers +
+                ", type=" + type +
                 ", preview='" + preview + '\'' +
                 ", logo='" + logo + '\'' +
                 '}';
         }
-
     }
 
 }

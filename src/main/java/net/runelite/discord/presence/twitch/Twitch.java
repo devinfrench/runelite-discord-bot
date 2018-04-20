@@ -1,16 +1,14 @@
 package net.runelite.discord.presence.twitch;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import net.runelite.discord.Bot;
-import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
 import sx.blah.discord.handle.obj.ActivityType;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
@@ -19,63 +17,63 @@ import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.MessageHistory;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class Twitch implements Runnable {
-
     private static final String EMBED_COLOR_HEX = "634299";
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Override
     public void run() {
-        final MessageHistory messages = getTwitchChannel().getMessageHistory();
-        final List<IUser> users = Bot.runelite.getUsersByRole(getStreamerRole());
+        try {
+            final MessageHistory messages = getTwitchChannel().getFullMessageHistory();
+            final List<String> existing = new ArrayList<>();
 
-        // Delete all non-streaming users
-        for (IMessage message : messages) {
-            if (message.getContent().contains("https://twitch.tv")) {
-                // Remove user from the list as his message is already present in channel
-                users.remove(message.getAuthor());
+            // Delete all non-streaming users
+            for (IMessage message : messages) {
+                if (message.getContent().contains("twitch.tv")) {
+                    // Add link to the list as this message is already present in channel
+                    existing.add(message.getContent());
 
-                final TwitchApi.Stream stream = findStream(message.getAuthor().getPresence());
+                    // Find existing stream from stream URL
+                    final TwitchApi.Stream stream = findExistingStream(message.getContent());
 
-                if (stream == null) {
-                    message.delete();
+                    // If stream ended, delete message
+                    if (stream == null) {
+                        message.delete();
+                        delay();
+                    }
                 }
             }
-        }
 
-        // Find all users that are probably streaming and properly update discord
-        for (IUser user : users) {
-            final TwitchApi.Stream stream = findStream(user.getPresence());
+            // Find all users that are probably streaming and properly update discord
+            for (IUser user : Bot.runelite.getUsersByRole(getStreamerRole())) {
 
-            if (stream != null) {
-                sendStreamMessage(user.getPresence(), stream);
+                // If stream url is not already in channel, check stream
+                if (user.getPresence().getStreamingUrl().isPresent()
+                    && !existing.contains(user.getPresence().getStreamingUrl().get())) {
+                    // Find stream for all streamers
+                    final TwitchApi.Stream stream = findStream(user.getPresence());
+
+                    if (stream != null) {
+                        sendStreamMessage(user.getPresence(), stream);
+                        delay();
+                    }
+                }
             }
+        } catch (Exception e) {
+            // Ignore all exceptions so next loop will start
+            e.printStackTrace();
         }
     }
 
     @EventSubscriber
     public void onReadyEvent(ReadyEvent event) {
-        scheduler.scheduleAtFixedRate(this, 0, 5, TimeUnit.MINUTES);
+        scheduler.scheduleWithFixedDelay(this, 1, 3, TimeUnit.MINUTES);
     }
 
-    @EventSubscriber
-    public void onPresenceUpdateEvent(PresenceUpdateEvent event) {
-        if (Bot.runelite == null || !event.getUser().hasRole(getStreamerRole())) {
-            return;
-        }
-
-        final IPresence newPresence = event.getNewPresence();
-        final IPresence oldPresence = event.getOldPresence();
-        final TwitchApi.Stream stream = findStream(newPresence);
-
-        if (stream != null && !event.getOldPresence().getStreamingUrl().isPresent()) {
-            sendStreamMessage(newPresence, stream);
-        } else if (stream == null && oldPresence.getStreamingUrl().isPresent()) {
-            deleteStreamMessage(oldPresence.getStreamingUrl().get());
-        }
+    private static void delay() {
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ignored) { }
     }
 
     private static TwitchApi.Stream findStream(final IPresence presence) {
@@ -83,22 +81,26 @@ public class Twitch implements Runnable {
             && presence.getActivity().get() == ActivityType.STREAMING
             && presence.getStreamingUrl().isPresent();
 
-        if (isStreamingSomething) {
-            final String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
-            final TwitchApi.Stream stream = TwitchApi.getStream(id);
+        return isStreamingSomething ? findExistingStream(presence.getStreamingUrl().get()) : null;
+    }
 
-            if (stream == null) {
-                return null;
-            }
+    private static TwitchApi.Stream findExistingStream(final String streamUrl) {
+        final String id = streamUrl.replace("https://www.twitch.tv/", "");
+        final TwitchApi.Stream stream = TwitchApi.getStream(id);
 
-            if (!stream.getGame().contains("RuneScape")) {
-                return null;
-            }
-
-            return stream;
+        if (stream == null) {
+            return null;
         }
 
-        return null;
+        if (!stream.getGame().contains("RuneScape")) {
+            return null;
+        }
+
+        if (!stream.getType().equals("live")) {
+            return null;
+        }
+
+        return stream;
     }
 
     private static IRole getStreamerRole() {
@@ -110,19 +112,8 @@ public class Twitch implements Runnable {
     }
 
     private static void sendStreamMessage(final IPresence presence, final TwitchApi.Stream stream) {
-
         final EmbedObject embedObject = createEmbedObject(presence, stream);
         getTwitchChannel().sendMessage(presence.getStreamingUrl().get(), embedObject);
-    }
-
-    private static void deleteStreamMessage(String streamUrl) {
-        final MessageHistory messages = getTwitchChannel().getMessageHistory();
-
-        for (IMessage message : messages) {
-            if (message.getContent().contains(streamUrl)) {
-                message.delete();
-            }
-        }
     }
 
     private static EmbedObject createEmbedObject(IPresence presence, TwitchApi.Stream stream) {
