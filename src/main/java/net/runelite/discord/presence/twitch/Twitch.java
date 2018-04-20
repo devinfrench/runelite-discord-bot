@@ -10,6 +10,9 @@ import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IPresence;
 import sx.blah.discord.util.MessageHistory;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class Twitch {
 
     private static final String EMBED_COLOR_HEX = "634299";
@@ -35,13 +38,19 @@ public class Twitch {
     }
 
     private void sendStreamMessage(IPresence presence) {
-        String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
-        TwitchApi.Stream stream = TwitchApi.getStream(id);
-        if (stream == null || !stream.getGame().contains("RuneScape")) {
-            return;
-        }
-        EmbedObject embedObject = createEmbedObject(presence, stream);
-        Bot.channels.get("twitch").sendMessage(presence.getStreamingUrl().get(), embedObject);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                String id = presence.getStreamingUrl().get().replace("https://www.twitch.tv/", "");
+                TwitchApi.Stream stream = TwitchApi.getStream(id);
+                if (stream == null || !stream.getGame().contains("RuneScape")) {
+                    return;
+                }
+                EmbedObject embedObject = createEmbedObject(presence, stream);
+                Bot.channels.get("twitch").sendMessage(presence.getStreamingUrl().get(), embedObject);
+                cancel();
+            }
+        }, 60000);
     }
 
     private EmbedObject createEmbedObject(IPresence presence, TwitchApi.Stream stream) {
