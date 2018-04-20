@@ -10,3 +10,6 @@ A bot for [RuneLite's](https://github.com/runelite) discord.
 ``!del <command>`` deletes the specified custom chat command.
 
 ``!help`` lists all custom chat commands.
+
+## How To Use
+``java -jar discord-1.0-SNAPSHOT-shaded.jar <discord_bot_token> <github_oauth_token> <twitch_client_id>``
