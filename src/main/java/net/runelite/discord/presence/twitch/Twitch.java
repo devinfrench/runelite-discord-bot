@@ -6,6 +6,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import net.runelite.discord.Bot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.api.internal.json.objects.EmbedObject;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
@@ -18,6 +20,7 @@ import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.MessageHistory;
 
 public class Twitch implements Runnable {
+    private static final Logger LOG = LoggerFactory.getLogger(Twitch.class);
     private static final String EMBED_COLOR_HEX = "634299";
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
@@ -26,18 +29,24 @@ public class Twitch implements Runnable {
         try {
             final MessageHistory messages = getTwitchChannel().getFullMessageHistory();
             final List<String> existing = new ArrayList<>();
+            LOG.debug("Running twitch task");
 
             // Delete all non-streaming users
             for (IMessage message : messages) {
                 if (message.getContent().contains("twitch.tv")) {
+                    LOG.debug("Found message {}", message.getContent());
+                    final String url = message.getContent().replaceAll("<[^>]+> ", "");
+                    LOG.debug("Found stream url {}", url);
+
                     // Add link to the list as this message is already present in channel
-                    existing.add(message.getContent());
+                    existing.add(url);
 
                     // Find existing stream from stream URL
-                    final TwitchApi.Stream stream = findExistingStream(message.getContent());
+                    final TwitchApi.Stream stream = findExistingStream(url);
 
                     // If stream ended, delete message
                     if (stream == null) {
+                        LOG.debug("Deleting stream message for {}", url);
                         message.delete();
                         delay();
                     }
@@ -50,11 +59,14 @@ public class Twitch implements Runnable {
                 // If stream url is not already in channel, check stream
                 if (user.getPresence().getStreamingUrl().isPresent()
                     && !existing.contains(user.getPresence().getStreamingUrl().get())) {
+                    LOG.debug("Found streaming user {}", user);
+
                     // Find stream for all streamers
                     final TwitchApi.Stream stream = findStream(user.getPresence());
 
                     if (stream != null) {
-                        sendStreamMessage(user.getPresence(), stream);
+                        LOG.debug("Sending stream message for {}", user.getPresence().getStreamingUrl().get());
+                        sendStreamMessage(user, stream);
                         delay();
                     }
                 }
@@ -111,9 +123,9 @@ public class Twitch implements Runnable {
         return Bot.channels.get("twitch");
     }
 
-    private static void sendStreamMessage(final IPresence presence, final TwitchApi.Stream stream) {
-        final EmbedObject embedObject = createEmbedObject(presence, stream);
-        getTwitchChannel().sendMessage(presence.getStreamingUrl().get(), embedObject);
+    private static void sendStreamMessage(final IUser user, final TwitchApi.Stream stream) {
+        final EmbedObject embedObject = createEmbedObject(user.getPresence(), stream);
+        getTwitchChannel().sendMessage(user.mention() +  " " + user.getPresence().getStreamingUrl().get(), embedObject);
     }
 
     private static EmbedObject createEmbedObject(IPresence presence, TwitchApi.Stream stream) {
