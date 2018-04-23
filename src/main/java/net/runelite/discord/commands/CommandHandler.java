@@ -5,6 +5,7 @@ import net.runelite.discord.commands.custom.CustomCommands;
 import net.runelite.discord.commands.custom.DelCommand;
 import net.runelite.discord.commands.github.GitHub;
 import net.runelite.discord.commands.github.Issues;
+import net.runelite.discord.commands.wiki.Wiki;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 
@@ -22,6 +23,7 @@ public class CommandHandler {
         commands.put("add", new AddCommand());
         commands.put("del", new DelCommand());
         commands.put("help", new Help());
+        commands.put("wiki", new Wiki());
     }
 
     @EventSubscriber

@@ -11,5 +11,7 @@ A bot for [RuneLite's](https://github.com/runelite) discord.
 
 ``!help`` lists all custom chat commands.
 
+``!wiki <keywords>`` searches a predefined list of wiki articles and links the matching wiki article.
+
 ## How To Use
 ``java -jar discord-1.0-SNAPSHOT-shaded.jar <discord_bot_token> <github_oauth_token> <twitch_client_id>``
